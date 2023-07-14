@@ -1,6 +1,6 @@
+import numpy as np
 import pathlib
 import re
-import numpy as np
 
 gblmath = {"np": np}
 for k, fu in np.__dict__.items():
@@ -28,12 +28,13 @@ class Mask:
     def __getitem__(self, key):
         """
         t.mask[1] -> row
-        t.mask['a'] -> pattern
+        t.mask['a'] -> pattern matching name
         l.mask[10:20]-> range
         l.mask['a':'b'] -> name range
         l.mask['a':'b':'myname'] -> name range with 'myname' column
         l.mask[-2:2:'x'] -> name value range with 'x' column
         l.mask[-2:2:'x',...] -> & combinations
+        l.mask[function] -> keep the row if function({col: val, ...}) gives True
         """
         mask = np.zeros(self.table._nrows, dtype=bool)
         if isinstance(key, int):
@@ -96,6 +97,9 @@ class Mask:
                     mask &= self[key[1:]]
             else:
                 return self.__getitem__(list(key))
+        elif callable(key):
+            kwarg_func = np.vectorize(lambda **kw: key(kw), otypes=[bool])
+            mask = kwarg_func(**self.table._data)
 
         return mask
 

@@ -12,6 +12,7 @@ data = {
 
 t = Table(data)
 
+
 def test_column_selection():
     assert len(t.betx)==len(data['betx'])
     assert t["betx", 0] == data['betx'][0]
@@ -29,6 +30,7 @@ def test_row_selection():
     assert t[:, t.s > 1].betx[1]==data['betx'][t.s > 1][1]
     assert t.rows[t.s > 1, 1].betx[0]==data['betx'][t.s > 1][0]
 
+
 def test_row_selection_names():
     assert t[:, "ip1"].betx[0]==data['betx'][0]
     assert t[:, "ip[23]"].betx[0]==data['betx'][1]
@@ -36,12 +38,17 @@ def test_row_selection_names():
     assert t[:, "notthere"]._nrows==0
     assert t[:, ["ip1", "ip2"]].betx[0]==data['betx'][0]
 
+
 def test_row_selection_names_with_rows():
     assert t.rows["ip2"].betx[0]==data['betx'][1]
     assert t.rows["ip[23]"].betx[0]==data['betx'][1]
     assert t.rows["ip.*##1"].betx[0]==data['betx'][1]
     assert t.rows["notthere"]._nrows==0
     assert t.rows[["ip1", "ip2"]].betx[1]==data['betx'][1]
+    assert t.rows[
+        lambda row: int(row['name'][-1]) <= 2 and row['betx'] > 4
+    ].name == 'ip2'
+
 
 def test_row_selection_ranges():
     assert t[:, 1:4:3].betx[0] == data['betx'][1]
@@ -52,6 +59,7 @@ def test_row_selection_ranges():
     assert t[:, "ip1":"ip3":"name"].betx[0]  == data['betx'][0]
     assert t[:, None].betx[0]  == data['betx'][0]
     assert t[:, :].betx[0]  == data['betx'][0]
+
 
 def test_row_selection_ranges_with_rows():
     assert t.rows[1:4:3].betx[0] == data['betx'][1]
