@@ -1,3 +1,8 @@
+# copyright ############################### #
+# This file is part of the Xdeps Package.   #
+# Copyright (c) CERN, 2023.                 #
+# ######################################### #
+
 import math
 
 import numpy as np

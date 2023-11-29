@@ -1,6 +1,6 @@
 # copyright ############################### #
 # This file is part of the Xdeps Package.   #
-# Copyright (c) CERN, 2021.                 #
+# Copyright (c) CERN, 2023.                 #
 # ######################################### #
 
 # cython: language_level=3
@@ -883,6 +883,35 @@ class InvertExpr(UnaryOpExpr):
     def _get_value(self):
         arg = BaseRef._mk_value(self._arg)
         return ~arg
+
+
+@cython.cclass
+class LogicalAndExpr(BinOpExpr):
+    _op_str = 'and'
+
+    def _get_value(self):
+        lhs = BaseRef._mk_value(self._lhs)
+        rhs = BaseRef._mk_value(self._rhs)
+        return lhs and rhs
+
+
+@cython.cclass
+class LogicalOrExpr(BinOpExpr):
+    _op_str = 'or'
+
+    def _get_value(self):
+        lhs = BaseRef._mk_value(self._lhs)
+        rhs = BaseRef._mk_value(self._rhs)
+        return lhs or rhs
+
+
+@cython.cclass
+class NotExpr(UnaryOpExpr):
+    _op_str = 'not'
+
+    def _get_value(self):
+        arg = BaseRef._mk_value(self._arg)
+        return not arg
 
 
 @cython.cclass
