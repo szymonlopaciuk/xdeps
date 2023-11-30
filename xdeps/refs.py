@@ -293,22 +293,22 @@ class BaseRef:
         return LshiftExpr(other, self)
 
     def __divmod__(self, other):
-        return BuiltinRef(self, builtins.divmod, (other,))
+        return BuiltinRef(builtins.divmod, self, other)
 
     def __round__(self, other=0):
-        return BuiltinRef(self, builtins.round, (other,))
+        return BuiltinRef(builtins.round, self, other)
 
     def __trunc__(self):
-        return BuiltinRef(self, math.trunc)
+        return BuiltinRef(math.trunc, self)
 
     def __floor__(self):
-        return BuiltinRef(self, math.floor)
+        return BuiltinRef(math.floor, self)
 
     def __ceil__(self):
-        return BuiltinRef(self, math.ceil)
+        return BuiltinRef(math.ceil, self)
 
     def __abs__(self):
-        return BuiltinRef(self, builtins.abs)
+        return BuiltinRef(builtins.abs, self)
 
 
 @cython.cclass
@@ -907,7 +907,7 @@ class LogicalOrExpr(BinOpExpr):
 
 @cython.cclass
 class NotExpr(UnaryOpExpr):
-    _op_str = 'not'
+    _op_str = 'not '
 
     def _get_value(self):
         arg = BaseRef._mk_value(self._arg)
@@ -916,34 +916,30 @@ class NotExpr(UnaryOpExpr):
 
 @cython.cclass
 class BuiltinRef(BaseRef):
-    _arg = cython.declare(object, visibility='public')
+    _args = cython.declare(object, visibility='public')
     _op = cython.declare(object, visibility='public')
-    _params = cython.declare(tuple, visibility='public')
 
-    def __init__(self, arg, op, params=()):
-        self._arg = arg
+    def __init__(self, op, *args):
+        self._args = args
         self._op = op
-        self._params = params
-        self._hash = hash((self._op, self._arg, self._params))
+        self._hash = hash((self._op, self._args))
 
     def _get_value(self):
-        arg = BaseRef._mk_value(self._arg)
-        return self._op(
-            arg,
-            *(BaseRef._mk_value(param) for param in self._params),
-        )
+        args = (BaseRef._mk_value(arg) for arg in self._args)
+        return self._op(*args)
 
     def _get_dependencies(self, out=None):
-        arg = self._arg
+        args = self._args
         if out is None:
             out = set()
-        if isinstance(arg, BaseRef):
-            arg._get_dependencies(out)
+        for arg in args:
+            if isinstance(arg, BaseRef):
+                arg._get_dependencies(out)
         return out
 
     def __repr__(self):
         op_symbol = OPERATOR_SYMBOLS.get(self._op, self._op.__name__)
-        return f"{op_symbol}({self._arg})"
+        return f"{op_symbol}({', '.join(repr(arg) for arg in self._args)})"
 
 
 @cython.cclass

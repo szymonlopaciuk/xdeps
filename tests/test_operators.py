@@ -42,3 +42,22 @@ def test_conditionals():
     assert if_then_else(ref.one > ref.two, ref.three, ref.string)._value == 'hello'
     assert if_then(ref.one < ref.two, ref.three)._value == 3
     assert if_then(ref.one > ref.two, ref.three)._value is False
+
+
+def test_to_from_json():
+    manager = xd.Manager()
+    container = SimpleNamespace(one=1, two=2, three=3, string='hello')
+    ref = manager.ref(container, 'ref')
+
+    ref.cond = ref.one < ref.two
+    ref.expect_three = if_then_else(ref.cond, ref.three, ref.string)
+    ref.expect_string = if_then_else(lnot(ref.cond), ref.three, ref.string)
+
+    dumped = manager.dump()
+    new_manager = xd.Manager()
+    new_ref = new_manager.ref(container, 'ref')
+    new_manager.load(dumped)
+
+    new_ref.cond = ref.one > ref.two
+    assert new_ref.expect_three._value == 'hello'
+    assert new_ref.expect_string._value == 3

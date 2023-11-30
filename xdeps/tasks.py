@@ -1,6 +1,6 @@
 # copyright ############################### #
 # This file is part of the Xdeps Package.   #
-# Copyright (c) CERN, 2021.                 #
+# Copyright (c) CERN, 2023.                 #
 # ######################################### #
 
 from collections import defaultdict
@@ -8,6 +8,7 @@ from copy import deepcopy
 import logging
 from typing import Set, Hashable
 
+from . import operators
 from .refs import BaseRef, MutableRef, ObjectAttrRef, Ref, RefCount
 from .utils import plot_pdot
 from .utils import AttrDict
@@ -467,8 +468,8 @@ class Manager:
         if dct is None:
             dct = self.containers
         for lhs, rhs in dump:
-            lhs = eval(lhs, {}, dct)
-            rhs = eval(rhs, {}, dct)
+            lhs = eval(lhs, operators.__dict__, dct)
+            rhs = eval(rhs, operators.__dict__, dct)
             task = ExprTask(lhs, rhs)
             if lhs in self.tasks:
                 self.unregister(lhs)
