@@ -17,10 +17,8 @@ jobs:
     - name: Setup Miniforge
       uses: conda-incubator/setup-miniconda@v3
       with:
-        mamba-version: "*"
+        miniforge-version: latest
         python-version: 3.10
-        channels: conda-forge,defaults
-        channel-priority: true
         activate-environment: build
     - name: Build the package
       shell: bash -el {0}
