@@ -14,15 +14,11 @@ jobs:
     steps:
     - name: Checkout source
       uses: actions/checkout@v4
-    - name: Setup Miniforge
-      uses: conda-incubator/setup-miniconda@v3
-      with:
-        miniforge-version: latest
-        python-version: "3.10"
-        activate-environment: build
     - name: Build the package
       shell: bash -el {0}
-      run: pip install build && python -m build
+      run: |
+        /opt/python/cp310-cp310/bin/pip install build && \
+        /opt/python/cp310-cp310/bin/python -m build
     - name: Store the dist as an artifact
       uses: actions/upload-artifact@v3
       with:
