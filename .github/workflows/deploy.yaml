@@ -15,14 +15,16 @@ jobs:
     - name: Checkout source
       uses: actions/checkout@v4
     - name: Setup Miniforge
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
-        miniforge-version: latest
-        python-version: "3.10"
-    - name: Install dependencies
-      run: pip install build
+        mamba-version: "*"
+        python-version: 3.10
+        channels: conda-forge,defaults
+        channel-priority: true
+        activate-environment: build
     - name: Build the package
-      run: python -m build
+      shell: bash -el {0}
+      run: pip install build && python -m build
     - name: Store the dist as an artifact
       uses: actions/upload-artifact@v3
       with:
