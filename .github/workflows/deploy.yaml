@@ -18,7 +18,9 @@ jobs:
       shell: bash -el {0}
       run: |
         /opt/python/cp310-cp310/bin/pip install build && \
-        /opt/python/cp310-cp310/bin/python -m build
+        /opt/python/cp310-cp310/bin/python -m build --sdist && \
+        /opt/python/cp310-cp310/bin/python -m build --wheel --outdir rawdist && \
+        auditwheel repair rawdist/*.whl -w dist/
     - name: Store the dist as an artifact
       uses: actions/upload-artifact@v3
       with:
