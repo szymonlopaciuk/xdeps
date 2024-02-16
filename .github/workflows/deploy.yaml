@@ -5,27 +5,50 @@ on:
     types: [released, edited]
 
 jobs:
+#  build:
+#    name: Build distribution
+#    runs-on: ubuntu-latest
+#    container:
+#      image: quay.io/pypa/manylinux_2_28_x86_64
+#
+#    steps:
+#    - name: Checkout source
+#      uses: actions/checkout@v4
+#    - name: Build the package
+#      shell: bash -el {0}
+#      run: |
+#        /opt/python/cp310-cp310/bin/pip install build && \
+#        /opt/python/cp310-cp310/bin/python -m build --sdist && \
+#        for PYDIR in in /opt/python/cp3*/bin; do \
+#          "${PYDIR}/pip" wheel --outdir rawdist && \
+#        auditwheel repair rawdist/*.whl -w dist/
+#    - name: Store the dist as an artifact
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: python-package-distributions
+#        path: dist/
   build:
-    name: Build distribution
-    runs-on: ubuntu-latest
-    container:
-      image: quay.io/pypa/manylinux_2_28_x86_64
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-13, macos-14]
 
     steps:
-    - name: Checkout source
-      uses: actions/checkout@v4
-    - name: Build the package
-      shell: bash -el {0}
-      run: |
-        /opt/python/cp310-cp310/bin/pip install build && \
-        /opt/python/cp310-cp310/bin/python -m build --sdist && \
-        /opt/python/cp310-cp310/bin/python -m build --wheel --outdir rawdist && \
-        auditwheel repair rawdist/*.whl -w dist/
-    - name: Store the dist as an artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v3
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.16.5
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
 
   publish-to-pypi:
     name: Publish Xdeps to PyPI
