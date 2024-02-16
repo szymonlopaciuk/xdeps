@@ -5,30 +5,8 @@ on:
     types: [released, edited]
 
 jobs:
-#  build:
-#    name: Build distribution
-#    runs-on: ubuntu-latest
-#    container:
-#      image: quay.io/pypa/manylinux_2_28_x86_64
-#
-#    steps:
-#    - name: Checkout source
-#      uses: actions/checkout@v4
-#    - name: Build the package
-#      shell: bash -el {0}
-#      run: |
-#        /opt/python/cp310-cp310/bin/pip install build && \
-#        /opt/python/cp310-cp310/bin/python -m build --sdist && \
-#        for PYDIR in in /opt/python/cp3*/bin; do \
-#          "${PYDIR}/pip" wheel --outdir rawdist && \
-#        auditwheel repair rawdist/*.whl -w dist/
-#    - name: Store the dist as an artifact
-#      uses: actions/upload-artifact@v3
-#      with:
-#        name: python-package-distributions
-#        path: dist/
-  build:
-    name: Build wheels on ${{ matrix.os }}
+  build-wheels:
+    name: Build wheels for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -44,16 +22,32 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_PROJECT_REQUIRES_PYTHON: "3.7"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: dist-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+
+  build-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-sdist
+          path: dist/*.tar.gz
 
   publish-to-pypi:
     name: Publish Xdeps to PyPI
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build-wheels, build-sdist]
     environment:
       name: test-pypi
       url: https://test.pypi.org/p/xdeps
@@ -64,8 +58,10 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v3
       with:
-        name: python-package-distributions
-        path: dist/
+        pattern: dist-*
+        path: dist
+        merge-multiple: true
+
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
